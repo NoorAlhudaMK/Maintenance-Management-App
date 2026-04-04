@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintenance_management_app/Core/UserInfo/user_info.dart';
 import 'package:maintenance_management_app/Features/MainPage/BLoC/home_bloc.dart';
-import 'package:maintenance_management_app/Features/MainPage/View/main_home_page.dart';
+import 'package:maintenance_management_app/Features/MainPage/View/manager_main_home_page.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../MainPage/View/technician_main_home_page.dart';
 import '../BLoC/auth_event.dart';
 import '../BLoC/auth_bloc.dart';
 import '../BLoC/auth_state.dart';
@@ -176,21 +178,38 @@ class _LoginViewState extends State<LoginView> {
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text("مرحباً بك: ${state.guardName}"),
+                              content: Text("مرحباً بك: ${state.userLoginName}"),
                               backgroundColor: Colors.green,
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BlocProvider(
-                                create: (context) => HomeBloc(),
-                                child: MainHomePage(),
+                          UserInfo.userName = state.userLoginName;
+
+                          if(_usernameController.text == "admin") {
+                            UserInfo.userRole = "admin";
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BlocProvider(
+                                  create: (context) => HomeBloc(),
+                                  child: ManagerMainHomePage(),
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          } else {
+                            UserInfo.userRole = "user";
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BlocProvider(
+                                  create: (context) => HomeBloc(),
+                                  child: TechnicianMainHomePage(),
+                                ),
+                              ),
+                            );
+                          }
+
                         } else if (state is AuthFailure) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -250,7 +269,7 @@ class _LoginViewState extends State<LoginView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "نظام إدارة أمن المجمع السكني",
+                          "نظام إدارة صيانة المجمع السكني",
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,

@@ -1,19 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../../Data/Models/TechnicianModel.dart';
 import '../../ManagerDashboard/View/manager_dashboard_view.dart';
+import '../../ManagerIncomingReports/View/incoming_reports_view.dart';
+import '../../Reports/View/reports_view.dart';
+import '../../Technician/View/technicians_view.dart';
+import '../../TechnicianProfile/View/technician_profile_view.dart';
+import '../../TechnicianTasks/View/technician_tasks_view.dart';
 import '../BLoC/home_bloc.dart';
 import '../BLoC/home_event.dart';
 import '../BLoC/home_state.dart';
 
-class MainHomePage extends StatelessWidget {
-   MainHomePage({super.key});
+class TechnicianMainHomePage extends StatelessWidget {
+  TechnicianMainHomePage({super.key});
 
   final List<Widget> _pages = [
-    ManagerDashboardView(),
-    Container(color: Colors.blue,),
-    Container(color: Colors.yellow,),
-    Container(color: Colors.green,),
+    TechnicianTasksView(),
+    TechnicianProfileView(
+      tech: TechnicianModel(
+        id: "EMP-0042",
+        name: "أشرف عبد الغفور",
+        specialty: "كهرباء",
+        initials: "أش",
+        rating: 4.9,
+        activeTasks: 0,
+        status: TechStatus.available,
+        avatarColor: const Color(0xFFE3F2FD),
+        isAvailable: true,
+        completedTasks: 28,
+        onTimePercentage: "96%",
+      ),
+    ),
   ];
 
   @override
@@ -26,9 +44,9 @@ class MainHomePage extends StatelessWidget {
           child: SafeArea(
             child: Scaffold(
               backgroundColor: AppColors.scaffoldBackground,
-            
+
               body: _pages[state.currentIndex],
-            
+
               bottomNavigationBar: BottomNavigationBar(
                 currentIndex: state.currentIndex,
                 onTap: (index) {
@@ -40,11 +58,9 @@ class MainHomePage extends StatelessWidget {
                 type: BottomNavigationBarType.fixed,
                 items: const [
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    label: "الرئيسية",
+                    icon: Icon(Icons.list_rounded),
+                    label: "المهام",
                   ),
-                  BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "البلاغات"),
-                  BottomNavigationBarItem(icon: Icon(Icons.people_outline_sharp), label: "الفنيون"),
                   BottomNavigationBarItem(icon: Icon(Icons.bar_chart_sharp), label: "التقارير"),
                 ],
               ),

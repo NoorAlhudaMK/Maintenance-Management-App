@@ -24,7 +24,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await Future.delayed(const Duration(seconds: 2));
 
         if (event.username.trim() == "admin" && event.password.trim() == "1234") {
-          emit(AuthSuccess("أشرف شروفي"));
+          emit(AuthSuccess("مدير الصيانة"));
+        } else if (event.username.trim() == "user" && event.password.trim() == "1234") {
+          emit(AuthSuccess("موظف الصيانة"));
         } else {
           emit(AuthFailure("اسم المستخدم أو كلمة المرور غير صحيحة"));
           await Future.delayed(const Duration(milliseconds: 500));
@@ -35,8 +37,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
 
-    on<LogoutRequested>((event, emit) {
-      emit(AuthInitial());
+    on<LogoutRequested>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        await Future.delayed(const Duration(seconds: 1));
+        emit(Unauthenticated());
+      } catch (e) {
+        emit(AuthError("فشل تسجيل الخروج"));
+      }
     });
   }
 }

@@ -8,6 +8,7 @@ class AppColors {
   static Color get accent => const Color(0xFFF2A916);
   static Color get scaffoldBackground => isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FB);
   static Color get cardBackground => isDark ? const Color(0xFF1E1E1E) : Colors.white;
+  static Color get success => const Color(0xFF27AE60);
 
   static Color get inputFill => isDark ? const Color(0xFFF4F7FA) : const Color(0xFFF4F7FA);
 
@@ -28,4 +29,8 @@ class AppColors {
   static Color get redBackground => const Color(0xFFFFEBEE);
   static Color get orangeStatus => accent;
   static Color get orangeBackground => const Color(0xFFFFF8E1);
+  static Color get urgentRed => const Color(0xFFE53935);
+  static Color get urgentRedBg => const Color(0xFFFFE5E5);
+  static Color get newBlue => const Color(0xFF2196F3);
+  static Color get newBlueBg => const Color(0xFFE3F2FD);
 }

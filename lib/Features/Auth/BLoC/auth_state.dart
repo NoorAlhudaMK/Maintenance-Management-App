@@ -9,11 +9,20 @@ class AuthInitial extends AuthState {
 class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
-  final String guardName;
-  AuthSuccess(this.guardName);
+  final String userLoginName;
+  AuthSuccess(this.userLoginName);
 }
 
 class AuthFailure extends AuthState {
   final String errorMessage;
   AuthFailure(this.errorMessage);
+}
+
+class Unauthenticated extends AuthState {}
+
+class AuthError extends AuthState {
+  final String message;
+  AuthError(this.message);
+
+  List<Object?> get props => [message];
 }
