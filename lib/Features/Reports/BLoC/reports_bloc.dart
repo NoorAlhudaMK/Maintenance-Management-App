@@ -39,7 +39,7 @@ class ReportsStatsBloc extends Bloc<ReportsStatsEvent, ReportsStatsState> {
 
     // حساب الأرقام الإجمالية بشكل تناسبي
     int totalReports = 5 * multiplier + (multiplier % 3);
-    double rating = 4.5 + (multiplier % 5) / 10; // تقييم يتراوح بين 4.5 و 4.9
+    double rating = 4.5 + (multiplier % 5) / 10; 
 
     return ReportsStatsState(
       selectedFilter: filterName,
