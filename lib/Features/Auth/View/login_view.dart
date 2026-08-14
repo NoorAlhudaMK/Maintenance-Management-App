@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:maintenance_management_app/Core/UserInfo/user_info.dart';
-import 'package:maintenance_management_app/Features/MainPage/BLoC/home_bloc.dart';
-import 'package:maintenance_management_app/Features/MainPage/View/manager_main_home_page.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../MainPage/View/manager_main_home_page.dart';
 import '../../MainPage/View/technician_main_home_page.dart';
 import '../BLoC/auth_event.dart';
 import '../BLoC/auth_bloc.dart';
@@ -18,8 +16,12 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController(text: "admin");
-  final TextEditingController _passwordController = TextEditingController(text: "1234");
+  final TextEditingController _usernameController = TextEditingController(
+    text: "Maintenance Supervisor",
+  );
+  final TextEditingController _passwordController = TextEditingController(
+    text: "123",
+  );
 
   @override
   void dispose() {
@@ -172,96 +174,58 @@ class _LoginViewState extends State<LoginView> {
                     ),
 
                     const SizedBox(height: 15),
-                    BlocConsumer<AuthBloc, AuthState>(
+                    BlocListener<AuthBloc, AuthState>(
                       listener: (context, state) {
                         if (state is AuthSuccess) {
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("مرحباً بك: ${state.userLoginName}"),
-                              backgroundColor: Colors.green,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-
-                          UserInfo.userName = state.userLoginName;
-
-                          if(_usernameController.text == "admin") {
-                            UserInfo.userRole = "admin";
-                            Navigator.push(
+                          if (state.role == 'maintenance_supervisor') {
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => BlocProvider(
-                                  create: (context) => HomeBloc(),
-                                  child: ManagerMainHomePage(),
-                                ),
+                                builder: (context) => ManagerMainHomePage(),
                               ),
                             );
-                          } else {
-                            UserInfo.userRole = "user";
-                            Navigator.push(
+                          } else if (state.role == 'maintenance') {
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => BlocProvider(
-                                  create: (context) => HomeBloc(),
-                                  child: TechnicianMainHomePage(),
-                                ),
+                                builder: (context) => TechnicianMainHomePage(),
                               ),
                             );
                           }
-
-                        } else if (state is AuthFailure) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(state.errorMessage),
-                              backgroundColor: Colors.red,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
                         }
                       },
-                      builder: (context, state) {
-                        if (state is AuthLoading) {
-                          return Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primary,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
                             ),
-                          );
-                        }
-
-                        return SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              elevation: 8,
-                              shadowColor: AppColors.primary.withOpacity(0.4),
-                            ),
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                context.read<AuthBloc>().add(
-                                  LoginSubmitted(
-                                    username: _usernameController.text,
-                                    password: _passwordController.text,
-                                  ),
-                                );
-                              }
-                            },
-                            child: const Text(
-                              "تسجيل الدخول",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                            elevation: 8,
+                            shadowColor: AppColors.primary.withOpacity(0.4),
+                          ),
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              context.read<AuthBloc>().add(
+                                LoginSubmitted(
+                                  username: _usernameController.text,
+                                  password: _passwordController.text,
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text(
+                            "تسجيل الدخول",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 15),
 

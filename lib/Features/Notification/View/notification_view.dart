@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:maintenance_management_app/Core/UserInfo/user_info.dart';
 import '../../../Core/Colors/app_colors.dart';
 import '../../../Data/Models/NotificationModel.dart';
 
@@ -17,13 +16,13 @@ class NotificationsView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           children: [
             _buildSectionTitle("اليوم"),
-            UserInfo.userRole == "admin" ? _buildNotificationCard(
-              type: NotificationType.emergency,
-              title: "مهمة جديدة طارئة",
-              subtitle: "تم إسناد بلاغ #090-2024 إليك",
-              time: "الآن",
-              showButton: true,
-            ) : Container(),
+            // UserInfo.userRole == "admin" ? _buildNotificationCard(
+            //   type: NotificationType.emergency,
+            //   title: "مهمة جديدة طارئة",
+            //   subtitle: "تم إسناد بلاغ #090-2024 إليك",
+            //   time: "الآن",
+            //   showButton: true,
+            // ) : Container(),
             _buildNotificationCard(
               type: NotificationType.success,
               title: "تم إنجاز المهمة",

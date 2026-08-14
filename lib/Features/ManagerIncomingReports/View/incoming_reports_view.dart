@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintenance_management_app/Data/Repositories/tickets_repository.dart';
 import '../../../Core/Colors/app_colors.dart';
 import '../../../Data/Models/ReportModel.dart';
 import '../BLoC/incoming_reports_bloc.dart';
@@ -13,7 +14,9 @@ class IncomingReportsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ReportsBloc(),
+      create: (context) =>
+          ReportsBloc(repository: TicketsRepository())
+            ..add(FetchTicketsEvent()),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
@@ -44,11 +47,7 @@ class IncomingReportsView extends StatelessWidget {
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
-              children: [
-
-              ],
-            ),
+            child: const Row(children: []),
           ),
           Text(
             "البلاغات الواردة",
@@ -170,12 +169,24 @@ class IncomingReportsView extends StatelessWidget {
   Widget _buildReportsList() {
     return BlocBuilder<ReportsBloc, ReportsState>(
       builder: (context, state) {
-        if (state.reports.isEmpty)
+        if (state is ReportsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is ReportsFailure) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text("خطأ: ${state.error}", textAlign: TextAlign.center),
+            ),
+          );
+        } else if (state.reports.isEmpty) {
           return const Center(child: Text("لا توجد بلاغات"));
+        }
+
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: state.reports.length,
-          itemBuilder: (context, index) => _reportCard(state.reports[index], context),
+          itemBuilder: (context, index) =>
+              _reportCard(state.reports[index], context),
         );
       },
     );
@@ -258,8 +269,16 @@ class IncomingReportsView extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => AssignTaskView(reportId: report.id, category: report.category.name == "electric" ? "كهرباء" :
-                    report.category.name == "plumbing" ? "سباكة" : "تكييف",)),
+                    MaterialPageRoute(
+                      builder: (context) => AssignTaskView(
+                        reportId: report.id,
+                        category: report.category.name == "electric"
+                            ? "كهرباء"
+                            : report.category.name == "plumbing"
+                            ? "سباكة"
+                            : "تكييف",
+                      ),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(

@@ -14,18 +14,17 @@ class TechnicianProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // نستخدم BlocListener لمراقبة حالة الخروج وتوجيه المستخدم لصفحة اللوجن فوراً
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is Unauthenticated) {
+        if (state is AuthUnauthenticated) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const LoginView()),
-                (route) => false,
+            (route) => false,
           );
-        } else if (state is AuthError) {
+        } else if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
         }
       },
@@ -164,7 +163,10 @@ class TechnicianProfileView extends StatelessWidget {
           onPressed: () {},
           child: Text(
             "عرض الكل",
-            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],
@@ -189,7 +191,7 @@ class TechnicianProfileView extends StatelessWidget {
                 color: Colors.black.withOpacity(0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: Row(
@@ -210,12 +212,19 @@ class TechnicianProfileView extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       "شقة 1B - بناية A",
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_back_ios_new, size: 14, color: Colors.grey),
+              const Icon(
+                Icons.arrow_back_ios_new,
+                size: 14,
+                color: Colors.grey,
+              ),
             ],
           ),
         );
@@ -224,7 +233,13 @@ class TechnicianProfileView extends StatelessWidget {
   }
 
   // --- كارت الإحصائيات الفردي ---
-  Widget _statCard(String value, String label, IconData icon, Color color, {bool isLarge = false}) {
+  Widget _statCard(
+    String value,
+    String label,
+    IconData icon,
+    Color color, {
+    bool isLarge = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -235,7 +250,7 @@ class TechnicianProfileView extends StatelessWidget {
             color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -282,7 +297,11 @@ class TechnicianProfileView extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w500),
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -295,25 +314,35 @@ class TechnicianProfileView extends StatelessWidget {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: const Text("تنبيه"),
             content: const Text("هل تريد تسجيل الخروج من حسابك؟"),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text("إلغاء", style: TextStyle(color: Colors.grey.shade600)),
+                child: Text(
+                  "إلغاء",
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 onPressed: () {
                   // إرسال حدث الخروج للبلوك
                   context.read<AuthBloc>().add(LogoutRequested());
                   Navigator.pop(dialogContext);
                 },
-                child: const Text("تسجيل خروج", style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  "تسجيل خروج",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

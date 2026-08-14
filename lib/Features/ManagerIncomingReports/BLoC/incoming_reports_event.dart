@@ -3,6 +3,8 @@ import '../../../Data/Models/TechnicianModel.dart';
 
 abstract class ReportsEvent {}
 
+class FetchTicketsEvent extends ReportsEvent {}
+
 class FilterReportsEvent extends ReportsEvent {
   final ReportCategory category;
   FilterReportsEvent(this.category);

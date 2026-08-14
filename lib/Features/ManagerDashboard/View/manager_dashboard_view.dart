@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../Core/CacheManager/cache_manager.dart';
 import '../../../Core/Colors/app_colors.dart';
 import '../../../Core/FormattedDateTime/get_arabic_date.dart';
 import '../../AddReport/View/add_new_report_view.dart';
 import '../../Auth/BLoC/auth_bloc.dart';
 import '../../Auth/BLoC/auth_event.dart';
-import '../../Auth/BLoC/auth_state.dart';
-import '../../Auth/View/login_view.dart';
 import '../../Notification/View/notification_view.dart';
 
 class ManagerDashboardView extends StatelessWidget {
@@ -14,38 +13,26 @@ class ManagerDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is Unauthenticated) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginView()),
-                (route) => false,
-          );
-        }
-      },
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Scaffold(
-          backgroundColor: AppColors.scaffoldBackground,
-          appBar: _buildAppBar(context),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 25),
-                _buildHeader(),
-                const SizedBox(height: 25),
-                _buildStatsGrid(),
-                const SizedBox(height: 35),
-                _buildLatestReportsHeader(context),
-                const SizedBox(height: 15),
-                _buildLatestReportCard(),
-                const SizedBox(height: 100),
-              ],
-            ),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBackground,
+        appBar: _buildAppBar(context),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 25),
+              _buildHeader(),
+              const SizedBox(height: 25),
+              _buildStatsGrid(),
+              const SizedBox(height: 35),
+              _buildLatestReportsHeader(context),
+              const SizedBox(height: 15),
+              _buildLatestReportCard(),
+              const SizedBox(height: 100),
+            ],
           ),
         ),
       ),
@@ -113,7 +100,6 @@ class ManagerDashboardView extends StatelessWidget {
     );
   }
 
-  // --- نافذة تأكيد تسجيل الخروج ---
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -121,25 +107,35 @@ class ManagerDashboardView extends StatelessWidget {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: const Text("تنبيه"),
             content: const Text("هل تريد تسجيل الخروج من حساب المدير؟"),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text("إلغاء", style: TextStyle(color: Colors.grey.shade600)),
+                child: Text(
+                  "إلغاء",
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 onPressed: () {
                   // إرسال حدث الخروج للبلوك
                   context.read<AuthBloc>().add(LogoutRequested());
                   Navigator.pop(dialogContext);
                 },
-                child: const Text("خروج", style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  "خروج",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -148,31 +144,37 @@ class ManagerDashboardView extends StatelessWidget {
     );
   }
 
-  // ... بقية الودجت المساعدة (Header, StatsGrid, etc.) تبقى كما هي ...
-
   Widget _buildHeader() {
-    return Row(
-      children: [
-        const Text("👋", style: TextStyle(fontSize: 28)),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return FutureBuilder<String>(
+      future: _getUserName(),
+      builder: (context, snapshot) {
+        return Row(
           children: [
-            Text(
-              "مرحباً، المدير أشرف",
-              style: TextStyle(
-                color: AppColors.textMain,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              getArabicFormattedDate(),
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            const Text("👋", style: TextStyle(fontSize: 24)),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "مرحباً، ${snapshot.data ?? '...'}",
+                  style: TextStyle(
+                    color: AppColors.textMain,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  getArabicFormattedDate(),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -298,7 +300,7 @@ class ManagerDashboardView extends StatelessWidget {
             ),
           ),
           child: Text(
-          "+ إضافة بلاغ", //  "عرض الكل",
+            "+ إضافة بلاغ", //  "عرض الكل",
             style: TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
@@ -456,5 +458,10 @@ class ManagerDashboardView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<String> _getUserName() async {
+    final user = await CacheManager.getUserModel();
+    return user.name;
   }
 }
