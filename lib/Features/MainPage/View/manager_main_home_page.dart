@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../../Data/Repositories/manager_repository.dart';
+import '../../ManagerDashboard/BLoC/manager_dashboard_bloc.dart';
+import '../../ManagerDashboard/BLoC/manager_dashboard_event.dart';
 import '../../ManagerDashboard/View/manager_dashboard_view.dart';
 import '../../ManagerIncomingReports/View/incoming_reports_view.dart';
 import '../../Reports/View/reports_view.dart';
 import '../../Technician/View/technicians_view.dart';
-import '../../TechnicianTasks/View/technician_tasks_view.dart';
 import '../BLoC/home_bloc.dart';
 import '../BLoC/home_event.dart';
 import '../BLoC/home_state.dart';
@@ -14,7 +16,12 @@ class ManagerMainHomePage extends StatelessWidget {
    ManagerMainHomePage({super.key});
 
   final List<Widget> _pages = [
-    ManagerDashboardView(),
+    BlocProvider(
+      create: (context) => ManagerDashboardBloc(
+        managerRepository: ManagerRepository(),
+      )..add(FetchManagerDashboardData(teamId: 1)), ///TODO: ضع رقم الـ team_id الصحيح هنا
+      child: const ManagerDashboardView(teamId: 1),
+    ),
     IncomingReportsView(),
     TechniciansView(),
     ReportsView(),
@@ -45,7 +52,7 @@ class ManagerMainHomePage extends StatelessWidget {
                 items: const [
                   BottomNavigationBarItem(
                     icon: Icon(Icons.home_outlined),
-                    label: "الرئيسية",
+                    label: "لوحة التحكم",
                   ),
                   BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "البلاغات"),
                   BottomNavigationBarItem(icon: Icon(Icons.people_outline_sharp), label: "الفنيون"),

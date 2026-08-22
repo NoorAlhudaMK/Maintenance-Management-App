@@ -1,3 +1,4 @@
+import 'package:anydrawer/anydrawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -7,6 +8,7 @@ import '../../Auth/BLoC/auth_bloc.dart';
 import '../../Auth/BLoC/auth_event.dart';
 import '../../Auth/BLoC/auth_state.dart';
 import '../../Auth/View/login_view.dart';
+import '../../Drawer/View/drawer_view.dart';
 
 class TechnicianProfileView extends StatelessWidget {
   final TechnicianModel tech;
@@ -33,6 +35,36 @@ class TechnicianProfileView extends StatelessWidget {
           textDirection: TextDirection.rtl,
           child: Scaffold(
             backgroundColor: AppColors.scaffoldBackground,
+            appBar: AppBar(
+              title: const Text(
+                'الــتــقــاريــر',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              elevation: 0,
+              centerTitle: true,
+              leading: IconButton(
+                onPressed: () async {
+                  showDrawer(
+                    context,
+                    builder: (context) {
+                      return AppDrawer(
+                        role: "technician",
+                      );
+                    },
+                  );
+                },
+                icon: Icon(
+                    Icons.menu_outlined
+                ),
+              ),
+              automaticallyImplyLeading: false,
+              automaticallyImplyActions: false,
+            ),
             body: SingleChildScrollView(
               child: Column(
                 children: [
@@ -61,7 +93,6 @@ class TechnicianProfileView extends StatelessWidget {
     );
   }
 
-  // --- الهيدر مع زر تسجيل الخروج ---
   Widget _buildHeader(BuildContext context, TechnicianModel tech) {
     return Container(
       width: double.infinity,

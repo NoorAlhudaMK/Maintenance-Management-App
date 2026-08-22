@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../../Data/Repositories/tickets_repository.dart';
 import '../../RepairDocumentation/View/repair_documentation_view.dart';
 import '../BLoC/task_details_bloc.dart';
 import '../BLoC/task_details_event.dart';
@@ -13,22 +14,35 @@ class TaskDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => TaskDetailsBloc()..add(LoadTaskDetails(taskId)),
+      create: (context) => TaskDetailsBloc(
+        ticketsRepository: TicketsRepository(),
+      )..add(LoadTaskDetails(taskId)),
       child: SafeArea(
         child: Directionality(
           textDirection: TextDirection.rtl,
-          child: Scaffold(
-            backgroundColor: AppColors.scaffoldBackground,
-            appBar: _buildAppBar(context),
-            body: BlocBuilder<TaskDetailsBloc, TaskDetailsState>(
-              builder: (context, state) {
-                if (state.isLoading)
-                  return const Center(child: CircularProgressIndicator());
-                final data = state.taskData;
-                if (data == null)
-                  return const Center(child: Text("لا توجد بيانات"));
+          child: BlocBuilder<TaskDetailsBloc, TaskDetailsState>(
+            builder: (context, state) {
+              if (state.isLoading) {
+                return Scaffold(
+                  backgroundColor: AppColors.scaffoldBackground,
+                  appBar: _buildAppBar(context, null),
+                  body: const Center(child: CircularProgressIndicator()),
+                );
+              }
 
-                return SingleChildScrollView(
+              final data = state.taskData;
+              if (data == null) {
+                return Scaffold(
+                  backgroundColor: AppColors.scaffoldBackground,
+                  appBar: _buildAppBar(context, null),
+                  body: const Center(child: Text("لا توجد بيانات")),
+                );
+              }
+
+              return Scaffold(
+                backgroundColor: AppColors.scaffoldBackground,
+                appBar: _buildAppBar(context, data),
+                body: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,24 +55,27 @@ class TaskDetailsView extends StatelessWidget {
                         Icons.description_outlined,
                         "وصف المشكلة",
                       ),
-                      _buildDescriptionBox(data['description']),
+                      _buildDescriptionBox(data['description'] ?? ''),
                       const SizedBox(height: 25),
                       _buildSectionTitle(Icons.image_outlined, "الصور المرفقة"),
                       _buildImageGrid(data),
                       const SizedBox(height: 25),
-                      _buildActionButton(context, state),
+                      _buildActionButton(context, data),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) {
+  AppBar _buildAppBar(BuildContext context, Map? data) {
+    // جلب الـ status القادم من الـ API (مثل status أو stage_name)
+    String status = data != null ? (data['status'] ?? data['stage_name'] ?? 'قيد التنفيذ') : 'جلب...';
+
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -82,10 +99,10 @@ class TaskDetailsView extends StatelessWidget {
             color: Colors.orange.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              "قيد التنفيذ",
-              style: TextStyle(
+              status,
+              style: const TextStyle(
                 color: Colors.orange,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -103,17 +120,17 @@ class TaskDetailsView extends StatelessWidget {
       children: [
         Row(
           children: [
-            _priorityBadge(data['priority']),
-            const Spacer(),
             Text(
-              "رقم البلاغ ${data['reportId']}",
+              "رقم البلاغ ${data['name'] ?? ''}",
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
+            const Spacer(),
+            _priorityBadge(data['priority_name'] ?? ''),
           ],
         ),
         const SizedBox(height: 10),
         Text(
-          data['title'],
+          data['title'] ?? '',
           style: TextStyle(
             color: AppColors.primary,
             fontSize: 24,
@@ -149,6 +166,9 @@ class TaskDetailsView extends StatelessWidget {
   }
 
   Widget _buildInfoCard(Map data) {
+    final resident = data['resident'] ?? {};
+    final phone = resident['phone'] ?? data['resident_phone'] ?? 'لا يوجد رقم';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -158,21 +178,21 @@ class TaskDetailsView extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _infoRow(Icons.location_on_outlined, "الموقع", data['location']),
+          _infoRow(Icons.location_on_outlined, "الموقع", data['unit_name'] ?? ''),
           const Divider(height: 30),
           _infoRow(
             Icons.person_outline,
             "اسم الساكن",
-            data['residentName'],
+            data['resident_name'] ?? '',
             trailing: _contactButton(),
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 40, top: 5),
+          Padding(
+            padding: const EdgeInsets.only(right: 40, top: 5),
             child: Align(
               alignment: Alignment.centerRight,
               child: Text(
-                "0555-XXX-XXX",
-                style: TextStyle(color: Colors.blueGrey),
+                phone,
+                style: const TextStyle(color: Colors.blueGrey),
               ),
             ),
           ),
@@ -182,11 +202,11 @@ class TaskDetailsView extends StatelessWidget {
   }
 
   Widget _infoRow(
-    IconData icon,
-    String title,
-    String value, {
-    Widget? trailing,
-  }) {
+      IconData icon,
+      String title,
+      String value, {
+        Widget? trailing,
+      }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -272,10 +292,14 @@ class TaskDetailsView extends StatelessWidget {
   }
 
   Widget _buildImageGrid(Map data) {
-    final List<Widget> items = [
-      _buildImage(data["image1"]),
-      _buildImage(data["image2"]),
-    ];
+    final List images = data['images'] ?? [];
+
+    if (images.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 10),
+        child: Text("لا توجد صور مرفقة"),
+      );
+    }
 
     return GridView.builder(
       shrinkWrap: true,
@@ -286,11 +310,14 @@ class TaskDetailsView extends StatelessWidget {
         mainAxisSpacing: 10,
         childAspectRatio: 1,
       ),
-      itemCount: 2,
-      itemBuilder: (context, index) => ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: items[index],
-      ),
+      itemCount: images.length,
+      itemBuilder: (context, index) {
+        final imageUrl = images[index]['url'] ?? '';
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: _buildImage(imageUrl),
+        );
+      },
     );
   }
 
@@ -298,7 +325,11 @@ class TaskDetailsView extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.network(imageUrl, fit: BoxFit.cover),
+        imageUrl.isNotEmpty
+            ? Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) {
+          return const Center(child: Icon(Icons.error));
+        })
+            : const Center(child: Icon(Icons.image_not_supported)),
         Positioned(
           bottom: 0,
           left: 0,
@@ -317,7 +348,7 @@ class TaskDetailsView extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, state) {
+  Widget _buildActionButton(BuildContext context, Map data) {
     return SizedBox(
       width: double.infinity,
       height: 55,
@@ -333,13 +364,13 @@ class TaskDetailsView extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => RepairDocumentationView(
-                taskId: state.taskData['reportId'] ?? "#000",
+                taskId: data['id']?.toString() ?? taskId,
               ),
             ),
           );
         },
         child: const Text(
-            "توثيق الإصلاح",
+          "توثيق الإصلاح",
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,

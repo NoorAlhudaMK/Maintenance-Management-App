@@ -1,29 +1,45 @@
-import '../../../Data/Models/TechnicianModel.dart';
+import '../../../Data/Models/maintenance_team_member_model.dart';
 
 class TechState {
-  final List<TechnicianModel> technicians;
-  final TechStatus selectedStatus;
+  final List<TeamMemberModel> technicians;
   final String? selectedTechId;
-  final TechnicianModel? selectedTechnician; // أضف هذا الحقل
+  final String? selectedTechnicianId;
+  final bool isLoading;
+  final String? errorMessage;
+  final int totalCount;
+  final int availableCount;
+  final int busyCount;
 
   TechState({
     required this.technicians,
-    required this.selectedStatus,
     this.selectedTechId,
-    this.selectedTechnician,
+    this.selectedTechnicianId,
+    this.isLoading = false,
+    this.errorMessage,
+    this.totalCount = 0,
+    this.availableCount = 0,
+    this.busyCount = 0,
   });
 
   TechState copyWith({
-    List<TechnicianModel>? technicians,
-    TechStatus? selectedStatus,
+    List<TeamMemberModel>? technicians,
     String? selectedTechId,
-    TechnicianModel? selectedTechnician,
+    String? selectedTechnicianId,
+    bool? isLoading,
+    String? errorMessage,
+    int? totalCount,
+    int? availableCount,
+    int? busyCount,
   }) {
     return TechState(
       technicians: technicians ?? this.technicians,
-      selectedStatus: selectedStatus ?? this.selectedStatus,
       selectedTechId: selectedTechId ?? this.selectedTechId,
-      selectedTechnician: selectedTechnician ?? this.selectedTechnician,
+      selectedTechnicianId: selectedTechnicianId ?? this.selectedTechnicianId,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage ?? this.errorMessage,
+      totalCount: totalCount ?? this.totalCount,
+      availableCount: availableCount ?? this.availableCount,
+      busyCount: busyCount ?? this.busyCount,
     );
   }
 }

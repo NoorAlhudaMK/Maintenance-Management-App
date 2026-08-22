@@ -1,44 +1,45 @@
 import 'dart:io';
-import 'package:equatable/equatable.dart';
+
+import '../../../Data/Models/maintenance_status_model.dart';
 
 enum SubmissionStatus { initial, loading, success, failure }
 
-class RepairDocumentationState extends Equatable {
+class RepairDocumentationState {
+  final SubmissionStatus status;
   final File? beforeImage;
   final File? afterImage;
   final String notes;
-  final SubmissionStatus status;
+  final String selectedStatus;
+  final List<MaintenanceStatusModel> statusesList;
   final String? errorMessage;
 
-  final String selectedStatus;
-
   const RepairDocumentationState({
+    this.status = SubmissionStatus.initial,
     this.beforeImage,
     this.afterImage,
-    this.notes = "",
-    this.status = SubmissionStatus.initial,
+    this.notes = '',
+    this.selectedStatus = '',
+    this.statusesList = const [],
     this.errorMessage,
-    this.selectedStatus = "تم حل المشكلة",
   });
 
   RepairDocumentationState copyWith({
+    SubmissionStatus? status,
     File? beforeImage,
     File? afterImage,
     String? notes,
-    SubmissionStatus? status,
-    String? errorMessage,
     String? selectedStatus,
+    List<MaintenanceStatusModel>? statusesList,
+    String? errorMessage,
   }) {
     return RepairDocumentationState(
+      status: status ?? this.status,
       beforeImage: beforeImage ?? this.beforeImage,
       afterImage: afterImage ?? this.afterImage,
       notes: notes ?? this.notes,
-      status: status ?? this.status,
-      errorMessage: errorMessage ?? this.errorMessage,
       selectedStatus: selectedStatus ?? this.selectedStatus,
+      statusesList: statusesList ?? this.statusesList,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
-
-  @override
-  List<Object?> get props => [beforeImage, afterImage, notes, status, errorMessage, selectedStatus];
 }

@@ -1,55 +1,75 @@
+import 'package:anydrawer/anydrawer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart' as intl;
 import '../../../Core/Colors/app_colors.dart';
-import '../../../Data/Models/NotificationModel.dart';
+import '../../../Data/Models/notification_model.dart';
+import '../../../Data/Repositories/notifications_repository.dart';
+import '../../Drawer/View/drawer_view.dart';
+import '../BLoC/notification_bloc.dart';
+import '../BLoC/notification_event.dart';
+import '../BLoC/notification_state.dart';
 
 class NotificationsView extends StatelessWidget {
-  const NotificationsView({super.key});
+  final String role;
+  NotificationsView( {super.key, required this.role});
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppColors.scaffoldBackground,
-        appBar: _buildAppBar(context),
-        body: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          children: [
-            _buildSectionTitle("اليوم"),
-            // UserInfo.userRole == "admin" ? _buildNotificationCard(
-            //   type: NotificationType.emergency,
-            //   title: "مهمة جديدة طارئة",
-            //   subtitle: "تم إسناد بلاغ #090-2024 إليك",
-            //   time: "الآن",
-            //   showButton: true,
-            // ) : Container(),
-            _buildNotificationCard(
-              type: NotificationType.success,
-              title: "تم إنجاز المهمة",
-              subtitle: "أغلق الفني أحمد البلاغ #085-2024",
-              time: "منذ 20 دقيقة",
-            ),
-            _buildNotificationCard(
-              type: NotificationType.waiting,
-              title: "انتظار قطع غيار",
-              subtitle: "البلاغ #083-2024 في انتظار قطع غيار",
-              time: "منذ ساعة",
-            ),
-            const SizedBox(height: 10),
-            _buildSectionTitle("الأمس"),
-            _buildNotificationCard(
-              type: NotificationType.normal,
-              title: "بلاغ جديد",
-              subtitle: "تم استلام بلاغ #081-2024",
-              time: "أمس 3:45م",
-            ),
-            _buildNotificationCard(
-              type: NotificationType.rating,
-              title: "تقييم الساكن",
-              subtitle: "الساكن خالد قيم الخدمة 5 نجوم",
-              time: "أمس 1:20م",
-            ),
-          ],
+    return BlocProvider(
+      create: (context) =>
+          NotificationsBloc(repository: NotificationsRepository())
+            ..add(LoadNotificationsEvent()),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          backgroundColor: AppColors.scaffoldBackground,
+          appBar: _buildAppBar(context),
+          body: BlocBuilder<NotificationsBloc, NotificationsState>(
+            builder: (context, state) {
+              if (state.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (state.errorMessage != null) {
+                return Center(
+                  child: Text(
+                    "حدث خطأ في التحميل",
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                );
+              }
+
+              if (state.todayNotifications.isEmpty &&
+                  state.yesterdayNotifications.isEmpty) {
+                return Center(
+                  child: Text(
+                    "لا توجد إشعارات حالياً",
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                );
+              }
+
+              return ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  if (state.todayNotifications.isNotEmpty) ...[
+                    _buildSectionTitle("اليوم"),
+                    ...state.todayNotifications.map(
+                      (n) => _buildNotificationCard(n),
+                    ),
+                  ],
+                  if (state.yesterdayNotifications.isNotEmpty) ...[
+                    _buildSectionTitle("الأمس"),
+                    ...state.yesterdayNotifications.map(
+                      (n) => _buildNotificationCard(n),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -60,25 +80,43 @@ class NotificationsView extends StatelessWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       title: Text(
-        "الإشعارات",
+        "الإشــعــارات",
         style: TextStyle(
           color: AppColors.textMain,
           fontWeight: FontWeight.bold,
         ),
       ),
       centerTitle: true,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: AppColors.textMain),
-        onPressed: () => Navigator.pop(context),
+      automaticallyImplyActions: false,
+      automaticallyImplyLeading: false,
+      leading: this.role == "supervisor" ? IconButton(
+        onPressed: ()  {
+         Navigator.pop(context);
+        },
+        icon: Icon(Icons.arrow_back_ios_sharp),
+      ) :  IconButton(
+        onPressed: () async {
+          showDrawer(
+            context,
+            builder: (context) {
+              return AppDrawer(role: "technician");
+            },
+          );
+        },
+        icon: Icon(Icons.menu_outlined),
       ),
       actions: [
-        TextButton(
-          onPressed: () {},
-          child: Text(
-            "تعليم الكل مقروء",
-            style: TextStyle(
-              color: AppColors.textMain,
-              fontWeight: FontWeight.bold,
+        Builder(
+          builder: (dialogContext) => TextButton(
+            onPressed: () {
+              dialogContext.read<NotificationsBloc>().add(MarkAllAsReadEvent());
+            },
+            child: Text(
+              "تعليم الكل مقروء",
+              style: TextStyle(
+                color: AppColors.textMain,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -100,14 +138,9 @@ class NotificationsView extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationCard({
-    required NotificationType type,
-    required String title,
-    required String subtitle,
-    required String time,
-    bool showButton = false,
-  }) {
-    // تحديد الألوان والأيقونة بناءً على النوع
+  Widget _buildNotificationCard(NotificationModel n) {
+    NotificationType type = n.mapToEnum;
+
     IconData icon;
     Color iconColor;
     Color bgColor;
@@ -156,13 +189,16 @@ class NotificationsView extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // نقطة الإشعار غير المقروء
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: CircleAvatar(radius: 3, backgroundColor: AppColors.primary),
-          ),
+          // إخفاء النقطة الزرقاء تلقائياً بمجرد أن تصبح isRead تساوي true
+          if (!n.isRead)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: CircleAvatar(
+                radius: 3,
+                backgroundColor: AppColors.primary,
+              ),
+            ),
           const SizedBox(width: 12),
-          // محتوى النص
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,7 +207,7 @@ class NotificationsView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      title,
+                      n.title,
                       style: TextStyle(
                         color: AppColors.textMain,
                         fontWeight: FontWeight.bold,
@@ -179,54 +215,32 @@ class NotificationsView extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      time,
+                      intl.DateFormat(
+                        'hh:mm a',
+                      ).format(DateTime.parse(n.createdAt)),
                       style: TextStyle(
-                        color: type == NotificationType.emergency
-                            ? AppColors.redStatus
-                            : AppColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
+                  n.body,
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                   ),
                 ),
-                if (showButton) ...[
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      minimumSize: const Size(double.infinity, 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      "تحويل المهمة",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
-          const SizedBox(width: 15),
-          // الأيقونة الملونة
+          const SizedBox(width: 12),
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
         ],
       ),

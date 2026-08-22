@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -29,4 +31,18 @@ class SubmitRepairReport extends RepairDocumentationEvent {
 class UpdateStatusEvent extends RepairDocumentationEvent {
   final String status;
   const UpdateStatusEvent(this.status);
+}
+
+class FetchStatusesEvent extends RepairDocumentationEvent {}
+
+class UploadImageEvent extends RepairDocumentationEvent {
+  final File imageFile;
+  final String imageType;
+  final String note;
+
+  UploadImageEvent({
+    required this.imageFile,
+    required this.imageType,
+    required this.note,
+  });
 }

@@ -35,17 +35,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthLoading());
       try {
         String? token = await CacheManager.getToken();
-
         if (token != null) {
           await authRepository.logout(token);
         }
-
         await CacheManager.clearAll();
 
-        emit(AuthInitial());
+        emit(AuthUnauthenticated("تم تسجيل الخروج"));
       } catch (e) {
         await CacheManager.clearAll();
-        emit(AuthInitial());
+        emit(AuthUnauthenticated(""));
       }
     });
 

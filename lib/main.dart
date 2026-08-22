@@ -3,6 +3,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'package:maintenance_management_app/Data/Repositories/auth_repository.dart';
 import 'package:maintenance_management_app/Data/Repositories/tickets_repository.dart';
 import 'package:maintenance_management_app/Features/MainPage/BLoC/home_bloc.dart';
@@ -33,7 +36,10 @@ void main() async {
     }
   }
 
-  runApp(const MyApp());
+  initializeDateFormatting('ar').then((_) {
+    runApp( MyApp());
+  });
+
 }
 
 void checkUserToken() async {
@@ -69,7 +75,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthBloc>(
           create: (context) => AuthBloc(authRepository: AuthRepository()),
         ),
-        BlocProvider<TechBloc>(create: (context) => TechBloc()),
+        BlocProvider<TechBloc>(create: (context) => TechBloc(ticketsRepository: TicketsRepository())),
         BlocProvider<HomeBloc>(create: (context) => HomeBloc()),
         BlocProvider<ReportsBloc>(
           create: (context) =>
@@ -80,12 +86,26 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               TechnicianTasksBloc()..add(LoadTechnicianTasks()),
         ),
-        BlocProvider<TaskDetailsBloc>(create: (context) => TaskDetailsBloc()),
+        BlocProvider<TaskDetailsBloc>(create: (context) => TaskDetailsBloc(ticketsRepository: TicketsRepository())),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(fontFamily: 'Cairo', useMaterial3: true),
-        home: const LoginView(),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+
+          localizationsDelegates: [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('ar', 'IQ'),
+          ],
+          locale: Locale('ar'),
+
+          theme: ThemeData(fontFamily: 'Cairo', useMaterial3: true),
+          home: const LoginView(),
+        ),
       ),
     );
   }
