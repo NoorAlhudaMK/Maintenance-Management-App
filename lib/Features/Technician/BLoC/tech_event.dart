@@ -1,10 +1,12 @@
-import '../../../Data/Models/TechnicianModel.dart';
-
 abstract class TechEvent {}
 
 class FilterTechEvent extends TechEvent {
-  final TechStatus status;
-  FilterTechEvent(this.status);
+  FilterTechEvent();
+}
+
+class SearchTechEvent extends TechEvent {
+  final String query;
+  SearchTechEvent(this.query);
 }
 
 class SelectTechForAssignmentEvent extends TechEvent {
@@ -16,3 +18,5 @@ class LoadTechProfileEvent extends TechEvent {
   final String techId;
   LoadTechProfileEvent(this.techId);
 }
+
+class LoadTeamsEvent extends TechEvent {}

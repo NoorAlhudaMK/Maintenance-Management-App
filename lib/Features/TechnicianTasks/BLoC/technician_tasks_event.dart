@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'technician_tasks_state.dart';
 
 abstract class TechnicianTasksEvent extends Equatable {
   const TechnicianTasksEvent();
@@ -7,13 +6,10 @@ abstract class TechnicianTasksEvent extends Equatable {
   @override
   List<Object?> get props => [];
 }
+class LoadTechnicianTasks extends TechnicianTasksEvent {
+  final String? search;
+  final String? dateFrom;
+  final String? dateTo;
 
-class LoadTechnicianTasks extends TechnicianTasksEvent {}
-
-class ChangeTaskTab extends TechnicianTasksEvent {
-  final TaskTabStatus status;
-  const ChangeTaskTab(this.status);
-
-  @override
-  List<Object?> get props => [status];
+  const LoadTechnicianTasks({this.search, this.dateFrom, this.dateTo});
 }

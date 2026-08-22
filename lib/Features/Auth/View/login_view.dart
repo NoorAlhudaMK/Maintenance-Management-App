@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../ForgetPassword/View/forget_password_view.dart';
 import '../../MainPage/View/manager_main_home_page.dart';
 import '../../MainPage/View/technician_main_home_page.dart';
 import '../BLoC/auth_event.dart';
@@ -17,7 +18,7 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController(
-    text: "Maintenance Supervisor",
+    text: "supervisor", //   "technician",
   );
   final TextEditingController _passwordController = TextEditingController(
     text: "123",
@@ -161,7 +162,9 @@ class _LoginViewState extends State<LoginView> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordView()));
+                        },
                         child: Text(
                           "نسيت كلمة المرور؟",
                           style: TextStyle(

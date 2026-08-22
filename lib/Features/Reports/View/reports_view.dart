@@ -1,7 +1,10 @@
+import 'package:anydrawer/anydrawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/Colors/app_colors.dart';
 import '../../../Core/Services/PdfReportService.dart';
+import '../../Drawer/View/drawer_view.dart';
+import '../../Notification/View/notification_view.dart';
 import '../BLoC/reports_bloc.dart';
 import '../BLoC/reports_event.dart';
 import '../BLoC/reports_state.dart';
@@ -35,31 +38,55 @@ class ReportsView extends StatelessWidget {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) { // أضفنا context هنا
-    return AppBar(
+  AppBar _buildAppBar(BuildContext context) {
+    return  AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      title: Text(
-        "التقارير",
-        style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold, fontSize: 22),
-      ),
+      automaticallyImplyLeading: false,
+      automaticallyImplyActions: false,
       centerTitle: true,
-      leading: BlocBuilder<ReportsStatsBloc, ReportsStatsState>(
-        builder: (context, state) {
-          return IconButton(
-            onPressed: () {
-              PdfReportService.generateAndSaveReport(state);
+      title: Text(
+        "الــتــقــاريــر",
+        style: TextStyle(
+          color: AppColors.textMain,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      leading: IconButton(
+        onPressed: () async {
+          showDrawer(
+            context,
+            builder: (context) {
+              return AppDrawer(role: "supervisor");
             },
-            icon: const Icon(Icons.file_download_outlined, color: Colors.blueGrey),
           );
         },
+        icon: Icon(Icons.menu_outlined),
       ),
       actions: [
+        BlocBuilder<ReportsStatsBloc, ReportsStatsState>(
+          builder: (context, state) {
+            return IconButton(
+              onPressed: () {
+                PdfReportService.generateAndSaveReport(state);
+              },
+              icon: const Icon(Icons.file_download_outlined, color: Colors.blueGrey),
+            );
+          },
+        ),
         Stack(
           alignment: Alignment.topLeft,
           children: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NotificationsView(role: "supervisor"),
+                  ),
+                );
+              },
               icon: Icon(Icons.notifications_none, color: AppColors.textMain),
             ),
             Positioned(
@@ -72,6 +99,27 @@ class ReportsView extends StatelessWidget {
             ),
           ],
         ),
+        // Padding(
+        //   padding: const EdgeInsets.only(left: 8.0),
+        //   child: Container(
+        //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        //     decoration: BoxDecoration(
+        //       color: AppColors.success,
+        //       borderRadius: BorderRadius.circular(20),
+        //     ),
+        //     child: const Row(
+        //       mainAxisSize: MainAxisSize.min,
+        //       children: [
+        //         Text(
+        //           "تلقائي",
+        //           style: TextStyle(color: Colors.white, fontSize: 14),
+        //         ),
+        //         SizedBox(width: 5),
+        //         Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+        //       ],
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }

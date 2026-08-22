@@ -1,133 +1,95 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:maintenance_management_app/Features/Technician/BLoC/tech_event.dart';
-import 'package:maintenance_management_app/Features/Technician/BLoC/tech_state.dart';
-import '../../../Data/Models/TechnicianModel.dart';
+import '../../../Data/Models/maintenance_team_member_model.dart';
+import 'tech_event.dart';
+import 'tech_state.dart';
+import '../../../Data/Repositories/tickets_repository.dart';
 
 class TechBloc extends Bloc<TechEvent, TechState> {
-  // القائمة الأساسية للبيانات
-  final List<TechnicianModel> _allData = [
-    // --- الحالة: متاح (Available) ---
-    TechnicianModel(
-      id: "EMP-0042",
-      name: "محمد العمري",
-      specialty: "كهرباء",
-      initials: "مح",
-      rating: 4.9,
-      activeTasks: 0,
-      status: TechStatus.available,
-      avatarColor: const Color(0xFFE3F2FD), // أزرق فاتح
-      isAvailable: true,
-      completedTasks: 28,
-      onTimePercentage: "96%",
-    ),
-    TechnicianModel(
-      id: "EMP-0044",
-      name: "حسن الوائلي",
-      specialty: "سباكة",
-      initials: "حو",
-      rating: 4.8,
-      activeTasks: 0,
-      status: TechStatus.available,
-      avatarColor: const Color(0xFFE8F5E9), // أخضر فاتح
-      isAvailable: true,
-      completedTasks: 42,
-      onTimePercentage: "98%",
-    ),
-    TechnicianModel(
-      id: "EMP-0047",
-      name: "مصطفى الجبوري",
-      specialty: "تكييف",
-      initials: "مج",
-      rating: 4.6,
-      activeTasks: 0,
-      status: TechStatus.available,
-      avatarColor: const Color(0xFFF3E5F5), // بنفسجي فاتح
-      isAvailable: true,
-      completedTasks: 31,
-      onTimePercentage: "92%",
-    ),
+  final TicketsRepository ticketsRepository;
+  List<TeamMemberModel> _allMembers = [];
 
-    // --- الحالة: مشغول (Busy) ---
-    TechnicianModel(
-      id: "EMP-0043",
-      name: "أحمد السالم",
-      specialty: "سباكة",
-      initials: "أح",
-      rating: 4.7,
-      activeTasks: 3,
-      status: TechStatus.busy,
-      avatarColor: const Color(0xFFFFF3E0), // برتقالي فاتح
-      isAvailable: false,
-      completedTasks: 15,
-      onTimePercentage: "88%",
-    ),
-    TechnicianModel(
-      id: "EMP-0045",
-      name: "عمر الفاروق",
-      specialty: "كهرباء",
-      initials: "عف",
-      rating: 4.2,
-      activeTasks: 2,
-      status: TechStatus.busy,
-      avatarColor: const Color(0xFFE1F5FE), // سماوي فاتح
-      isAvailable: false,
-      completedTasks: 20,
-      onTimePercentage: "85%",
-    ),
+  TechBloc({required this.ticketsRepository})
+      : super(TechState(technicians: [])) {
+    on<LoadTeamsEvent>(_onLoadTeams);
+    on<FilterTechEvent>(_onFilterTech);
+    on<SelectTechForAssignmentEvent>(_onSelectTechForAssignment);
+    on<LoadTechProfileEvent>(_onLoadTechProfile);
+    on<SearchTechEvent>(_onSearchTech);
 
-    // --- الحالة: غير متاح / إجازة (Not Available) ---
-    TechnicianModel(
-      id: "EMP-0046",
-      name: "ليث القيسي",
-      specialty: "تكييف",
-      initials: "لق",
-      rating: 4.5,
-      activeTasks: 0,
-      status: TechStatus.notAvailable,
-      avatarColor: const Color(0xFFFFEBEE), // أحمر فاتح جداً
-      isAvailable: false,
-      completedTasks: 50,
-      onTimePercentage: "94%",
-    ),
-    TechnicianModel(
-      id: "EMP-0048",
-      name: "ياسر المحمد",
-      specialty: "مصاعد",
-      initials: "يم",
-      rating: 4.9,
-      activeTasks: 0,
-      status: TechStatus.notAvailable,
-      avatarColor: const Color(0xFFF5F5F5), // رمادي فاتح
-      isAvailable: false,
-      completedTasks: 12,
-      onTimePercentage: "100%",
-    ),
-  ];
+    add(LoadTeamsEvent());
+  }
 
-  TechBloc() : super(TechState(technicians: [], selectedStatus: TechStatus.all)) {
+  Future<void> _onLoadTeams(LoadTeamsEvent event, Emitter<TechState> emit) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null));
+    try {
+      final List<TeamMemberModel> membersData = await ticketsRepository.fetchTeamMembers();
+      _allMembers = membersData;
 
-    // عند التشغيل، نعرض البيانات فوراً
-    on<FilterTechEvent>((event, emit) {
-      if (event.status == TechStatus.all) {
-        emit(state.copyWith(technicians: _allData, selectedStatus: event.status));
-      } else {
-        final filtered = _allData.where((t) => t.status == event.status).toList();
-        emit(state.copyWith(technicians: filtered, selectedStatus: event.status));
+      final total = membersData.length;
+      // final available = membersData.where((m) => m. == 'active').length;
+      // final busy = membersData.where((m) => m.status == 'busy').length;
+
+      emit(state.copyWith(
+        isLoading: false,
+        technicians: membersData,
+        totalCount: total,
+        // availableCount: available,
+        // busyCount: busy,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      ));
+    }
+  }
+
+  Future<void> _onSearchTech(SearchTechEvent event, Emitter<TechState> emit) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final List<TeamMemberModel> membersData = await ticketsRepository.fetchTeamMembers(
+        search: event.query,
+      );
+      emit(state.copyWith(
+        isLoading: false,
+        technicians: membersData,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      ));
+    }
+  }
+
+  void _onFilterTech(FilterTechEvent event, Emitter<TechState> emit) {
+    // // التأكد من أن الحدث والحالة ليسا null
+    // final status = event.status ?? TechStatus.all;
+    //
+    // if (status == TechStatus.all) {
+    //   emit(state.copyWith(technicians: _allMembers, selectedStatus: status));
+    // } else {
+    //   final filtered = _allMembers.where((t) => (t.status ?? '') == status.name).toList();
+    //   emit(state.copyWith(technicians: filtered, selectedStatus: status));
+    // }
+  }
+
+  void _onSelectTechForAssignment(SelectTechForAssignmentEvent event, Emitter<TechState> emit) {
+    emit(state.copyWith(selectedTechId: event.techId));
+  }
+
+  void _onLoadTechProfile(LoadTechProfileEvent event, Emitter<TechState> emit) {
+    TeamMemberModel? foundMember;
+
+    for (var member in _allMembers) {
+      if (member.id.toString() == event.techId) {
+        foundMember = member;
+        break;
       }
-    });
+    }
 
-    on<SelectTechForAssignmentEvent>((event, emit) {
-      emit(state.copyWith(selectedTechId: event.techId));
-    });
-
-    on<LoadTechProfileEvent>((event, emit) {
-      // نستخدم _allData هنا أيضاً
-      final tech = _allData.firstWhere((t) => t.id == event.techId);
-      emit(state.copyWith(selectedTechnician: tech));
-    });
-
-    // استدعاء الفلتر الأولي لجلب البيانات عند أول تشغيل
-    add(FilterTechEvent(TechStatus.all));
+    // ملاحظة: إذا كنت تحتفظ بـ selectedTechnician كـ MaintenanceTeamModel،
+    // يمكنك تعديل الحالة لتتناسب مع موديل العضو الجديد أو تركه بحسب تصميمك.
+    emit(state.copyWith(selectedTechnicianId: event.techId));
   }
 }
